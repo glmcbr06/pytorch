@@ -1,5 +1,3 @@
-import os.path
-
 import torch
 from torch.utils.data import Dataset
 from torchvision import datasets as vis_datasets
@@ -7,8 +5,11 @@ from torchvision.transforms import ToTensor
 from torch.utils.data.sampler import SubsetRandomSampler
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import os
+import torch.utils.data as data_utils
 from torchtext import datasets as txt_datasets
+
 
 # Get the training dataset
 train_data = vis_datasets.FashionMNIST(
@@ -50,6 +51,14 @@ for i in np.arange(20):
     ax.imshow(np.squeeze(images[i]), cmap='gray')
     f.tight_layout()
 plt.show()
+
+csv_data_path = 'path/to/data'
+df = pd.read_csv(csv_data_path)  # Read the csv data
+pd.to_numeric(df['column'])  # type the data properly
+column_df = pd.DataFrame(df['column'])
+
+# create the tensor
+train_tensor = torch.tensor(column_df['column'].values)
 
 
 
