@@ -1,3 +1,5 @@
+import os.path
+
 import torch
 from torch.utils.data import Dataset
 from torchvision import datasets as vis_datasets
@@ -5,14 +7,10 @@ from torchvision.transforms import ToTensor
 from torch.utils.data.sampler import SubsetRandomSampler
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 from torchtext import datasets as txt_datasets
 
-
-# This is a sample Python script.
-
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
-
+# Get the training dataset
 train_data = vis_datasets.FashionMNIST(
     root='data',
     train=True,
@@ -20,7 +18,7 @@ train_data = vis_datasets.FashionMNIST(
     transform=ToTensor()
 )
 
-
+# Get the test dataset
 test_data = vis_datasets.FashionMNIST(
     root='data',
     train=False,
@@ -28,7 +26,7 @@ test_data = vis_datasets.FashionMNIST(
     transform=ToTensor()
 )
 
-# create a validate sample from training dataset
+# Create a validation sample from training dataset
 indices = list(range(len(train_data)))
 np.random.shuffle(indices)
 split = int(np.floor(0.2 * len(train_data)))
