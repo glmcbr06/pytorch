@@ -4,30 +4,49 @@ import numpy as np
 
 # Define known people
 HOME = os.path.expanduser('~')
-KNOWN_FACES_DIR = os.path.join(HOME, 'media', 'model', 'known_faces')
-assert os.path.exists(KNOWN_FACES_DIR), f'the path does not exist {KNOWN_FACES_DIR}'
-known_faces = []
-known_names = []
 
 
-def load_known_faces():
-    """Loads known faces and their encodings"""
-    global known_faces, known_names
-    for person_name in os.listdir(KNOWN_FACES_DIR):
-        person_dir = os.path.join(KNOWN_FACES_DIR, person_name)
-        print(f'loading images for {person_dir}')
-        if os.path.isdir(person_dir):
-            for image_name in os.listdir(person_dir):
-                image_path = os.path.join(person_dir, image_name)
-                image = face_recognition.load_image_file(image_path)
-                encodings = face_recognition.face_encodings(image)
-                if encodings:
-                    known_faces.append(encodings[0])
-                    known_names.append(person_name)
+
+# Define directories
+KNOWN_PEOPLE_DIR = os.path.join(HOME, 'media', 'model', 'known_faces')
+KNOWN_DOGS_DIR = os.path.join(HOME, 'media', 'model', 'known_dogs')
+assert os.path.exists(KNOWN_PEOPLE_DIR), f'the path does not exist {KNOWN_PEOPLE_DIR}'
+assert os.path.exists(KNOWN_DOGS_DIR), f'the path does not exist {KNOWN_DOGS_DIR}'
+
+# known_faces = []
+# known_names = []
 
 
-def recognize_face(image_path):
-    """Detects and recognizes a face in an image"""
+def load_known_entities(directory, label_prefix):
+    """Loads known faces or dogs and their encodings"""
+    known_entities = []
+    known_labels = []
+
+    for label in os.listdir(directory):
+        person_or_dog_dir = os.path.join(directory, label)
+        print(f'loading from {person_or_dog_dir}')
+        if os.path.isdir(person_or_dog_dir):
+            for image_name in os.listdir(person_or_dog_dir):
+                image_path = os.path.join(person_or_dog_dir, image_name)
+
+                # Skip non-image files
+                if not image_name.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.gif')):
+                    continue
+
+                try:
+                    image = face_recognition.load_image_file(image_path)
+                    encodings = face_recognition.face_encodings(image)
+                    if encodings:
+                        known_entities.append(encodings[0])
+                        known_labels.append(f"{label_prefix}{label}")
+                except Exception as e:
+                    print(f"Skipping {image_path}: {e}")
+
+    return known_entities, known_labels
+
+
+def recognize_entity(image_path):
+    """Recognizes a human or dog in an image"""
     image = face_recognition.load_image_file(image_path)
     face_locations = face_recognition.face_locations(image)
     face_encodings = face_recognition.face_encodings(image, face_locations)
@@ -39,6 +58,11 @@ def recognize_face(image_path):
             return known_names[matched_idx]
     return "unknown"
 
-# Load known faces at script start
-load_known_faces()
 
+# Load known people and dogs
+known_faces, known_names = load_known_entities(KNOWN_PEOPLE_DIR, "human_")
+known_dog_faces, known_dog_names = load_known_entities(KNOWN_DOGS_DIR, "dog_")
+
+# Merge both lists
+known_faces.extend(known_dog_faces)
+known_names.extend(known_dog_names)

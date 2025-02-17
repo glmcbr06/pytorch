@@ -1,5 +1,5 @@
 import torch
-from recognize import recognize_face
+from recognize import recognize_entity
 import torchvision.transforms as transforms
 import torchvision.models as models
 from PIL import Image
@@ -101,11 +101,11 @@ def organize():
         image_path = os.path.join(IMAGE_DIR, name)
         has_face = detect_faces(image_path)
 
-        face_label = recognize_face(image_path) if has_face else ""
+        name_label = recognize_entity(image_path) if has_face else ""
         date = get_photo_date(image_path)
         assert os.path.exists(image_path), f'the path does not exist {image_path}'
         label = classify_image(image_path=image_path)
-        print(label, face_label, date, name)
+        print(label, name_label, date, name)
 
 
 if __name__ == '__main__':
