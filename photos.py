@@ -2,6 +2,7 @@ import torch
 import torchvision.transforms as transforms
 import torchvision.models as models
 from PIL import Image
+from PIL.ExifTags import TAGS
 import os
 import shutil
 import urllib.request
@@ -9,9 +10,21 @@ from tqdm import tqdm
 from datetime import datetime
 import cv2
 
+
 HOME = os.path.expanduser('~')
 IMAGE_DIR = os.path.join(HOME, "media", "model")
 SORTED_FOLDER = os.path.join(HOME, 'media', 'sorted')
+# Define a mapping for high-level categories
+CATEGORY_MAPPING = {
+    "dog": ["german shepherd", "labrador retriever", "golden retriever", "bulldog", "beagle", "poodle", "chihuahua"],
+    "cat": ["siamese cat", "persian cat", "maine coon", "sphinx", "tabby"],
+    "bird": ["parrot", "eagle", "sparrow", "penguin", "owl"],
+    "vehicle": ["car", "truck", "motorcycle", "bus", "bicycle"],
+    "person": ["man", "woman", "child", "boy", "girl"]
+}
+
+haar_cascade_path = os.path.join(cv2.__path__[0], "data", "haarcascade_frontalface_default.xml")
+
 # load the resnet model
 model = models.resnet18(weights='ResNet18_Weights.DEFAULT')
 model.eval()
@@ -33,6 +46,30 @@ def download_labels(url):
         return [line.decode("utf-8").strip() for line in f.readlines()]
 
 
+def map_to_high_level_category(label):
+    """Map a specific label to a high-level category."""
+    for category, sub_labels in CATEGORY_MAPPING.items():
+        if any(sub_label in label.lower() for sub_label in sub_labels):
+            return category
+    return label  # Default to the original label if no match is found
+
+
+def get_photo_date(image_path):
+    """Extracts the creation date of a photo from metadata."""
+    try:
+        image = Image.open(image_path)
+        exif_data = image._getexif()
+        if exif_data:
+            for tag, value in exif_data.items():
+                tag_name = TAGS.get(tag, tag)
+                if tag_name == "DateTimeOriginal":
+                    return datetime.strptime(value, "%Y:%m:%d %H:%M:%S").strftime("%Y-%m-%d")
+    except Exception as e:
+        print(f"EXIF read error for {image_path}: {e}")
+
+    return "unknown_date"
+
+
 def classify_image(image_path):
     """classify an image and return the top predicted label"""
     image = Image.open(image_path).convert('RGB')
@@ -40,17 +77,28 @@ def classify_image(image_path):
     with torch.no_grad():
         outputs = model(image)
         _, predicted = outputs.max(1)
+    return map_to_high_level_category(labels[predicted.item()])
 
-    return labels[predicted.item()], _
+
+def detect_faces(image_path):
+    """Detect faces in an image and return whether a person is present."""
+    face_cascade = cv2.CascadeClassifier(haar_cascade_path)
+    img = cv2.imread(image_path)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+    return len(faces) > 0
 
 
 def organize():
     for name in image_names:
         image_path = os.path.join(IMAGE_DIR, name)
+        has_face = detect_faces(image_path)
+        face_label = "_person" if has_face else ""
+        date = get_photo_date(image_path)
         assert os.path.exists(image_path), f'the path does not exist {image_path}'
         label = classify_image(image_path=image_path)
-        print(label, name)
-        
+        print(label, face_label, date, name)
+
 
 if __name__ == '__main__':
     # define the image directory
