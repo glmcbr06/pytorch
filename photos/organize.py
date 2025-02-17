@@ -19,11 +19,14 @@ CATEGORY_MAPPING = {
     "dog": ["german shepherd", "labrador retriever", "golden retriever", "bulldog", "beagle", "poodle", "chihuahua"],
     "cat": ["siamese cat", "persian cat", "maine coon", "sphinx", "tabby"],
     "bird": ["parrot", "eagle", "sparrow", "penguin", "owl"],
-    "vehicle": ["car", "truck", "motorcycle", "bus", "bicycle"],
-    "person": ["man", "woman", "child", "boy", "girl"]
+    "vehicle": ["car", "truck", "motorcycle", "bus", "bicycle", "seat belt"],
+    "person": ["man", "woman", "child", "boy", "girl"],
+    "home": ["mobile home"],
+    "sports": ["volleyball"]
 }
 
-haar_cascade_path = os.path.join(cv2.__path__[0], "data", "haarcascade_frontalface_default.xml")
+cv2_base_path = os.path.dirname(cv2.__file__)
+haar_cascade_path = os.path.join(cv2_base_path, "data", "haarcascade_frontalface_default.xml")
 
 # load the resnet model
 model = models.resnet18(weights='ResNet18_Weights.DEFAULT')
@@ -83,6 +86,9 @@ def classify_image(image_path):
 def detect_faces(image_path):
     """Detect faces in an image and return whether a person is present."""
     face_cascade = cv2.CascadeClassifier(haar_cascade_path)
+    if face_cascade.empty():
+        raise FileNotFoundError(f"Cannot load Haar cascade file from {haar_cascade_path}")
+
     img = cv2.imread(image_path)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
