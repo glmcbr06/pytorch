@@ -12,7 +12,7 @@ import cv2
 
 
 HOME = os.path.expanduser('~')
-IMAGE_DIR = os.path.join(HOME, "media", "model")
+IMAGE_DIR = os.path.join(HOME, "media", "model", "test")
 SORTED_FOLDER = os.path.join(HOME, 'media', 'sorted')
 # Define a mapping for high-level categories
 CATEGORY_MAPPING = {
