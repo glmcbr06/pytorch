@@ -3,3 +3,4 @@
 .ipynb_checkpoints
 Ex_Files_Hands_On_PyTorch_ML.zip
 Ex_Files_Hands_On_PyTorch_ML
+*/__pycache__/

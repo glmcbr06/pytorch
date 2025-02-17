@@ -15,10 +15,10 @@ def load_known_faces():
     global known_faces, known_names
     for person_name in os.listdir(KNOWN_FACES_DIR):
         person_dir = os.path.join(KNOWN_FACES_DIR, person_name)
+        print(f'loading images for {person_dir}')
         if os.path.isdir(person_dir):
             for image_name in os.listdir(person_dir):
                 image_path = os.path.join(person_dir, image_name)
-                print(image_name)
                 image = face_recognition.load_image_file(image_path)
                 encodings = face_recognition.face_encodings(image)
                 if encodings:
@@ -41,5 +41,4 @@ def recognize_face(image_path):
 
 # Load known faces at script start
 load_known_faces()
-print(known_names)
-print(known_faces)
+
